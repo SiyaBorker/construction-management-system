@@ -1,24 +1,30 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { CostEstimate } from '../types';
+import { CostEstimate, CostEstimateRequest } from '../types';
 
-if (!process.env.API_KEY) {
-  // In a real production app, this key would be handled securely on a backend server.
-  // For this frontend-only demo, we rely on it being set in the environment.
-  console.warn("API_KEY environment variable not set. AI Estimator will not work.");
-}
+// Fix: Initialize GoogleGenAI with a named API key parameter as required by the SDK.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
-
-const responseSchema = {
+const costEstimateSchema = {
     type: Type.OBJECT,
     properties: {
         estimatedTotalCost: {
             type: Type.OBJECT,
             properties: {
                 min: { type: Type.NUMBER },
-                max: { type: Type.NUMBER }
-            }
+                max: { type: Type.NUMBER },
+            },
+            required: ['min', 'max']
         },
+        contingency: {
+            type: Type.OBJECT,
+            properties: {
+                percentage: { type: Type.NUMBER },
+                amount: { type: Type.NUMBER },
+            },
+            required: ['percentage', 'amount']
+        },
+        timelineEstimate: { type: Type.STRING },
+        summary: { type: Type.STRING },
         costBreakdown: {
             type: Type.ARRAY,
             items: {
@@ -27,82 +33,52 @@ const responseSchema = {
                     category: { type: Type.STRING },
                     cost: { type: Type.NUMBER },
                     percentage: { type: Type.NUMBER },
-                    details: { type: Type.STRING }
-                }
+                    details: { type: Type.STRING },
+                },
+                required: ['category', 'cost', 'percentage', 'details']
             }
-        },
-        timelineEstimate: {
-            type: Type.STRING,
-            description: "A textual description of the estimated project timeline, e.g., '6-8 months'."
-        },
-        contingency: {
-            type: Type.OBJECT,
-            properties: {
-                percentage: { type: Type.NUMBER },
-                amount: { type: Type.NUMBER }
-            }
-        },
-        summary: {
-            type: Type.STRING,
-            description: "A brief summary of the cost estimate, including key assumptions and potential risks."
         }
-    }
+    },
+    required: ['estimatedTotalCost', 'contingency', 'timelineEstimate', 'summary', 'costBreakdown']
 };
 
+export async function getCostEstimate(request: CostEstimateRequest): Promise<CostEstimate> {
+    const prompt = `
+        Provide a detailed cost estimation for a construction project with the following specifications.
+        - Project Type: ${request.projectType}
+        - Total Area: ${request.area} sq ft
+        - Number of Floors: ${request.floors}
+        - Quality Level: ${request.quality}
+        - Primary Materials: ${request.materials}
+        - Additional Features: ${request.features}
 
-export const getCostEstimate = async (formData: {
-  projectType: string;
-  area: number;
-  floors: number;
-  quality: string;
-  materials: string;
-  features: string;
-}): Promise<CostEstimate> => {
-  if (!process.env.API_KEY) {
-      throw new Error("API Key is not configured. Cannot get estimate.");
-  }
-  
-  const prompt = `
-    Analyze the following construction project details and provide a detailed cost estimate.
+        Break down the cost into major categories (e.g., Materials, Labor, Permits, Equipment, Subcontractors, Overhead). For each category, provide an estimated cost, its percentage of the total, and brief details.
+        Also provide an overall estimated cost range (min and max), a recommended contingency percentage and amount, a project timeline estimate, and a brief summary of the estimation.
+        Respond in JSON format according to the provided schema.
+    `;
 
-    Project Details:
-    - Project Type: ${formData.projectType}
-    - Total Area: ${formData.area} square feet
-    - Number of Floors: ${formData.floors}
-    - Quality Level: ${formData.quality}
-    - Primary Materials: ${formData.materials}
-    - Special Features: ${formData.features || 'None'}
+    try {
+        // Fix: Use the modern ai.models.generateContent method to query the Gemini API.
+        const response = await ai.models.generateContent({
+            // Fix: Use the recommended 'gemini-2.5-flash' model for this text-based task.
+            model: "gemini-2.5-flash",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: costEstimateSchema,
+            },
+        });
 
-    Provide a comprehensive cost breakdown, including but not limited to:
-    - Site preparation, Foundation, Framing, Exterior & Interior finishes, MEP (Mechanical, Electrical, Plumbing), Labor costs, Permits and fees, and a contingency fund.
+        // Fix: Access the generated text directly via the `text` property on the response object.
+        const jsonText = response.text.trim();
+        const parsedResult = JSON.parse(jsonText);
+        return parsedResult as CostEstimate;
 
-    Return the data in the specified JSON format. The costs should be realistic for a project in a major metropolitan area in the USA.
-  `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: responseSchema,
-        temperature: 0.5,
-      },
-    });
-
-    const jsonString = response.text.trim();
-    const parsedJson = JSON.parse(jsonString) as CostEstimate;
-    return parsedJson;
-
-  } catch (error) {
-    console.error("Error calling Gemini API:", error);
-    if (error instanceof Error) {
-        // Provide a more user-friendly error message
-        if (error.message.includes('API key not valid')) {
-             throw new Error('The provided API Key is not valid. Please check your configuration.');
+    } catch (error) {
+        console.error("Error getting cost estimate from Gemini API:", error);
+        if (error instanceof Error) {
+            throw new Error(`Failed to generate cost estimate: ${error.message}`);
         }
-        throw new Error(`Failed to get cost estimate from AI: ${error.message}`);
+        throw new Error("An unknown error occurred while generating the cost estimate.");
     }
-    throw new Error("An unknown error occurred while fetching the cost estimate.");
-  }
-};
+}
