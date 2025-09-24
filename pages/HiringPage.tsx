@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { APPLICANTS } from '../constants';
-import { Applicant, ApplicantStatus } from '../types';
+import React, { useState, useMemo } from 'react';
+import { JOBS, APPLICANTS } from '../constants';
+import { Applicant, ApplicantStatus, Job } from '../types';
 
 const getStatusColor = (status: ApplicantStatus) => {
     switch (status) {
@@ -13,59 +13,120 @@ const getStatusColor = (status: ApplicantStatus) => {
     }
 };
 
+const CandidatesModal: React.FC<{ job: Job; applicants: Applicant[]; onClose: () => void; }> = ({ job, applicants, onClose }) => {
+    const relevantApplicants = useMemo(() => {
+        return applicants.filter(app => app.jobId === job.id);
+    }, [job, applicants]);
+
+    return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in-fast">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl border border-gray-200">
+                <div className="p-4 border-b flex justify-between items-center">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">Applicants for {job.title}</h2>
+                        <p className="text-sm text-gray-500">{relevantApplicants.length} candidate(s)</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-200">
+                        <svg className="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div className="p-4 max-h-[70vh] overflow-y-auto">
+                    {relevantApplicants.length > 0 ? (
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidate</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {relevantApplicants.map(applicant => (
+                                    <tr key={applicant.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <img className="h-10 w-10 rounded-full" src={applicant.avatarUrl} alt={applicant.name} />
+                                                <div className="ml-4">
+                                                    <div className="text-sm font-medium text-gray-900">{applicant.name}</div>
+                                                    <div className="text-xs text-gray-500">{applicant.submissionDate}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(applicant.stage)}`}>{applicant.stage}</span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
+                                            <button onClick={() => alert(`Viewing profile for ${applicant.name}`)} className="text-amber-600 hover:text-amber-800">View Profile</button>
+                                            <button onClick={() => alert(`Scheduling interview with ${applicant.name}`)} className="text-blue-600 hover:text-blue-800">Schedule Interview</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p className="text-center text-gray-500 py-8">No applicants for this position yet.</p>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const HiringPage: React.FC = () => {
-    const [applicants, setApplicants] = useState<Applicant[]>(APPLICANTS);
-    
+    const [jobs] = useState<Job[]>(JOBS);
+    const [applicants] = useState<Applicant[]>(APPLICANTS);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+
+    const handleViewCandidates = (job: Job) => {
+        setSelectedJob(job);
+        setIsModalOpen(true);
+    };
+
     return (
         <div className="container mx-auto">
+            {isModalOpen && selectedJob && (
+                <CandidatesModal job={selectedJob} applicants={applicants} onClose={() => setIsModalOpen(false)} />
+            )}
+
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Hiring Pipeline</h1>
-                    <p className="text-gray-600 mt-1">Manage job applicants and track their progress.</p>
+                    <h1 className="text-3xl font-bold text-gray-900">Job Openings</h1>
+                    <p className="text-gray-600 mt-1">Manage open positions and view applicant pipelines.</p>
                 </div>
                  <button className="bg-amber-500 text-slate-900 font-bold py-2 px-4 rounded-md hover:bg-amber-600 transition-colors flex items-center shadow-sm">
                     <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
-                    Add Candidate
+                    Post New Job
                 </button>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md overflow-x-auto border border-gray-200">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Candidate</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Applying For</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submission Date</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {applicants.map(applicant => (
-                            <tr key={applicant.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center">
-                                        <img className="h-10 w-10 rounded-full" src={applicant.avatarUrl} alt={applicant.name} />
-                                        <div className="ml-4">
-                                            <div className="text-sm font-medium text-gray-900">{applicant.name}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{applicant.role}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{applicant.submissionDate}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(applicant.stage)}`}>
-                                        {applicant.stage}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-4">
-                                    <button className="text-amber-600 hover:text-amber-800">View Profile</button>
-                                    <button className="text-blue-600 hover:text-blue-800">Update Stage</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+            <div className="space-y-4">
+                {jobs.map(job => {
+                    const applicantCount = applicants.filter(a => a.jobId === job.id).length;
+                    return (
+                        <div key={job.id} className="bg-white p-4 rounded-lg shadow-md border border-gray-200 flex justify-between items-center hover:shadow-lg transition-shadow">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">{job.title}</h3>
+                                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
+                                    <span>{job.department}</span>
+                                    <span className="text-gray-300">|</span>
+                                    <span>{job.location}</span>
+                                    <span className="text-gray-300">|</span>
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs font-medium">{job.type}</span>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <button
+                                    onClick={() => handleViewCandidates(job)}
+                                    className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-md transition-colors text-sm"
+                                >
+                                    View Candidates ({applicantCount})
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

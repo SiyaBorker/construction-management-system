@@ -82,9 +82,27 @@ export interface Applicant {
     id: string;
     name: string;
     role: string;
+    jobId: string; // Link applicant to a specific job
     stage: ApplicantStatus;
     submissionDate: string;
     avatarUrl: string;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  department: string;
+  location: string;
+  type: 'Full-time' | 'Contract' | 'Internship';
+  openings: number;
+}
+
+
+export interface Notification {
+  id: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
 }
 
 export type Page = 'Dashboard' | 'Projects' | 'AI Cost Estimator' | 'Stock Management' | 'Financials' | 'Team' | 'Hiring' | 'Reports';

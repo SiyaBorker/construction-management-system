@@ -10,8 +10,8 @@ import EmployeeManagementPage from './pages/EmployeeManagementPage';
 import HiringPage from './pages/HiringPage';
 import ReportsPage from './pages/ReportsPage';
 import LoginPage from './pages/LoginPage';
-import { Page, Project, Employee, StockItem, Invoice } from './types';
-import { PROJECTS, EMPLOYEES, INVENTORY, INVOICES } from './constants';
+import { Page, Project, Employee, StockItem, Invoice, Notification } from './types';
+import { PROJECTS, EMPLOYEES, INVENTORY, INVOICES, NOTIFICATIONS } from './constants';
 
 const App: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -20,6 +20,7 @@ const App: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>(EMPLOYEES);
   const [inventory, setInventory] = useState<StockItem[]>(INVENTORY);
   const [invoices, setInvoices] = useState<Invoice[]>(INVOICES);
+  const [notifications, setNotifications] = useState<Notification[]>(NOTIFICATIONS);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -52,7 +53,11 @@ const App: React.FC = () => {
     <div className="flex h-screen bg-gray-50">
       <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
       <div className="flex-1 flex flex-col ml-64">
-        <Header pageTitle={currentPage} />
+        <Header 
+          pageTitle={currentPage} 
+          notifications={notifications}
+          setNotifications={setNotifications}
+        />
         <main className="flex-1 p-8 overflow-y-auto">
           {renderPage()}
         </main>

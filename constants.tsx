@@ -1,4 +1,4 @@
-import { Project, Employee, StockItem, Invoice, Applicant } from './types';
+import { Project, Employee, StockItem, Invoice, Applicant, Notification, Job } from './types';
 
 export const PROJECTS: Project[] = [
   { id: 'p1', name: 'Downtown Tower', client: 'SkyHigh Inc.', progress: 75, status: 'In Progress', deadline: '2024-12-31', budget: 5000000, spent: 3200000 },
@@ -31,10 +31,26 @@ export const INVOICES: Invoice[] = [
   { id: 'INV-1004', clientName: 'SkyHigh Inc.', projectName: 'Downtown Tower', amount: 300000, dueDate: '2024-08-25', status: 'Pending' },
 ];
 
+export const JOBS: Job[] = [
+  { id: 'job1', title: 'Senior Civil Engineer', department: 'Engineering', location: 'New York, NY', type: 'Full-time', openings: 2 },
+  { id: 'job2', title: 'Project Coordinator', department: 'Management', location: 'Remote', type: 'Full-time', openings: 1 },
+  { id: 'job3', title: 'Electrician', department: 'Trades', location: 'San Francisco, CA', type: 'Contract', openings: 5 },
+  { id: 'job4', title: 'Safety Inspector', department: 'Compliance', location: 'Austin, TX', type: 'Full-time', openings: 1 },
+];
+
 export const APPLICANTS: Applicant[] = [
-    { id: 'a1', name: 'Frank Miller', role: 'Civil Engineer', stage: 'Interview', submissionDate: '2024-06-20', avatarUrl: 'https://picsum.photos/id/201/200/200' },
-    { id: 'a2', name: 'Grace Hopper', role: 'Project Coordinator', stage: 'Offer', submissionDate: '2024-06-18', avatarUrl: 'https://picsum.photos/id/202/200/200' },
-    { id: 'a3', name: 'Henry Ford', role: 'Electrician', stage: 'Screening', submissionDate: '2024-07-01', avatarUrl: 'https://picsum.photos/id/203/200/200' },
-    { id: 'a4', name: 'Ivy Green', role: 'Safety Inspector', stage: 'Hired', submissionDate: '2024-05-30', avatarUrl: 'https://picsum.photos/id/204/200/200' },
-    { id: 'a5', name: 'Jack Ryan', role: 'Civil Engineer', stage: 'Rejected', submissionDate: '2024-06-22', avatarUrl: 'https://picsum.photos/id/206/200/200' },
+    { id: 'a1', name: 'Frank Miller', role: 'Civil Engineer', jobId: 'job1', stage: 'Interview', submissionDate: '2024-06-20', avatarUrl: 'https://picsum.photos/id/201/200/200' },
+    { id: 'a2', name: 'Grace Hopper', role: 'Project Coordinator', jobId: 'job2', stage: 'Offer', submissionDate: '2024-06-18', avatarUrl: 'https://picsum.photos/id/202/200/200' },
+    { id: 'a3', name: 'Henry Ford', role: 'Electrician', jobId: 'job3', stage: 'Screening', submissionDate: '2024-07-01', avatarUrl: 'https://picsum.photos/id/203/200/200' },
+    { id: 'a4', name: 'Ivy Green', role: 'Safety Inspector', jobId: 'job4', stage: 'Hired', submissionDate: '2024-05-30', avatarUrl: 'https://picsum.photos/id/204/200/200' },
+    { id: 'a5', name: 'Jack Ryan', role: 'Civil Engineer', jobId: 'job1', stage: 'Rejected', submissionDate: '2024-06-22', avatarUrl: 'https://picsum.photos/id/206/200/200' },
+    { id: 'a6', name: 'Nikola Tesla', role: 'Electrician', jobId: 'job3', stage: 'Interview', submissionDate: '2024-07-02', avatarUrl: 'https://picsum.photos/id/207/200/200' },
+];
+
+
+export const NOTIFICATIONS: Notification[] = [
+  { id: 'n1', message: 'Project "Downtown Tower" is 75% complete.', timestamp: '2 hours ago', read: false },
+  { id: 'n2', message: 'New invoice #INV-1004 created for SkyHigh Inc.', timestamp: '8 hours ago', read: false },
+  { id: 'n3', message: 'Material "Portland Cement" is running low.', timestamp: '1 day ago', read: false },
+  { id: 'n4', message: 'Applicant Grace Hopper has accepted the offer.', timestamp: '2 days ago', read: true },
 ];
